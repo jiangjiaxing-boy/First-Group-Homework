@@ -1,0 +1,24 @@
+public string gettriangle()
+        {
+            double b = Convert.ToDouble(textBox5.Text);
+            double h = Convert.ToDouble(textBox6.Text);
+            double s=0.5 * b * h;
+            string s1 = "三角形面积为";
+            string s2 = "平方厘米";
+            string s3 = "平方英寸";
+            string s4 = Convert.ToString(s);
+            string S = "";
+            if (radioButton1.Checked == true)
+            {
+                S = s1 + s4 + s2;
+            }
+            else if (radioButton2.Checked == true)
+            {
+                S = s1 + s4 + s3;
+            }
+            else
+            {
+                S = "请选择单位";
+            }
+            return S;
+        }
