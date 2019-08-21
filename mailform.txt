@@ -1,0 +1,164 @@
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Net;
+using System.Net.Mail;
+namespace WHU.SWRH.XZY.摄像头监控程序
+{
+    public partial class MailForm : Form
+    {
+        private CTGU.HEE.IniLib.IniClass ini;
+
+        public MailInfo emailInfo;
+        public MailForm()
+        {
+            InitializeComponent();
+
+            ini = new CTGU.HEE.IniLib.IniClass(Application.StartupPath + "\\config.ini");
+            if (ini != null)
+            {
+                string tempStr;
+                tempStr = ini.ReadValue("Mail", "MailUsername");
+                userNametextBox3.Text = tempStr;
+                tempStr = ini.ReadValue("Mail", "MailPassword");
+                passwordtextBox3.Text = tempStr;
+                tempStr = ini.ReadValue("Mail", "MailToAddress");
+                toMailAddresstextBox3.Text = tempStr;
+                tempStr = ini.ReadValue("Mail", "SMTP");
+                SMTPAddresscomboBox1.Text = tempStr;
+                tempStr = ini.ReadValue("Mail", "Title");
+                mailSubjecttextBox4.Text = tempStr;
+                tempStr = ini.ReadValue("Mail", "MailMessage");
+                mailBodyrichTextBox1.Text = tempStr;
+            }
+
+        }
+
+        private void MailForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void 设置邮件button_Click(object sender, EventArgs e)
+        {
+            if (ini != null)
+            {
+                ini.WriteValue("Mail", "MailUsername", userNametextBox3.Text);
+                ini.WriteValue("Mail", "MailPassword", passwordtextBox3.Text);
+                ini.WriteValue("Mail", "MailToAddress", toMailAddresstextBox3.Text);
+                ini.WriteValue("Mail", "SMTP", SMTPAddresscomboBox1.Text);
+                ini.WriteValue("Mail", "Title", mailSubjecttextBox4.Text);
+                ini.WriteValue("Mail", "MailMessage", mailBodyrichTextBox1.Text);
+            }
+            emailInfo = new MailInfo();
+            emailInfo.MailUsername = userNametextBox3.Text;
+            emailInfo.MailPassword = passwordtextBox3.Text;
+            emailInfo.MailToAddress = toMailAddresstextBox3.Text;
+            emailInfo.SMTP = SMTPAddresscomboBox1.Text;
+            emailInfo.Title = mailSubjecttextBox4.Text;
+            emailInfo.MailMessage = mailBodyrichTextBox1.Text;
+            this.DialogResult = DialogResult.OK;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+        }
+    }
+
+    public class MailInfo
+    {
+        /// <summary>
+        /// 邮箱用户名
+        /// </summary>
+        public string MailUsername;
+        /// <summary>
+        /// 邮箱密码
+        /// </summary>
+        public string MailPassword;
+        /// <summary>
+        /// 邮箱SMTP地址
+        /// </summary>
+        public string SMTP;
+        /// <summary>
+        /// 发送至邮箱
+        /// </summary>
+        public string MailToAddress;
+        /// <summary>
+        /// 邮件主题
+        /// </summary>
+        public string Title = "警报";
+        /// <summary>
+        /// 邮件消息
+        /// </summary>
+        public string MailMessage = "";
+        /// <summary>
+        /// 邮件附件地址
+        /// </summary>
+        public string AttachFilePath;
+
+        public void Send()
+        {
+            //首先检查邮件发件人的用户名及密码，SMTP地址及收件人地址是否为空
+            if (MailUsername.Trim() == "")
+            {
+                MessageBox.Show("发件人邮箱地址为空！请输入邮箱地址！", "警告!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (MailPassword.Trim() == "")
+            {
+                MessageBox.Show("发件人邮箱密码为空！请输入邮箱密码！", "警告!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (SMTP.Trim() == "")
+            {
+                MessageBox.Show("发件人邮箱SMTP主机地址为空！请输入SMTP主机地址！", "警告!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (MailToAddress.Trim() == "")
+            {
+                MessageBox.Show("收件人邮箱地址为空！请输入邮箱地址！", "警告!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            System.Threading.Thread thread = new System.Threading.Thread(delegate()
+            {
+                SendMail();
+            });
+            Control.CheckForIllegalCrossThreadCalls = false;
+            thread.Start();
+        }
+
+        private void SendMail()
+        {
+            MailAddress fromAddress = new MailAddress(MailUsername);
+            MailAddress toAddress = new MailAddress(MailToAddress);
+            MailMessage message = new MailMessage(fromAddress, toAddress);
+            Attachment attachFile=null;//附件
+            //添加附件
+            if (System.IO.File.Exists(AttachFilePath))
+            {
+                attachFile = new Attachment(AttachFilePath);
+                message.Attachments.Add(attachFile);
+            }
+            message.Subject = Title;//设置邮件主题
+            message.IsBodyHtml = true;//设置邮件正文为html格式
+            message.Body = MailMessage + "\n" + DateTime.Now.ToString()
+                + "\n********************** 设计、编写。Email：xwebsite@163.com";//设置邮件内容
+            SmtpClient client = new SmtpClient(SMTP);
+            //设置发送邮件身份验证方式
+            string username = MailUsername;
+            username = username.Substring(0, username.IndexOf("@"));
+            client.Credentials = new NetworkCredential(username, MailPassword);
+            client.Send(message);
+            if(attachFile!=null)
+                attachFile.Dispose();
+        }
+    }
+}
