@@ -1,0 +1,24 @@
+public string getrectangle()
+        {
+            double w = Convert.ToDouble(textBox3.Text);
+            double l = Convert.ToDouble(textBox4.Text);
+            double s=w*l;
+            string s1 = "矩形面积为";
+            string s2 = "平方厘米";
+            string s3 = "平方英寸";
+            string s4 = Convert.ToString(s);
+            string S = "";
+            if (radioButton1.Checked == true)
+            {
+                S = s1 + s4 + s2;
+            }
+            else if (radioButton2.Checked == true)
+            {
+                S = s1 + s4 + s3;
+            }
+            else
+            {
+                S = "请选择单位";
+            }
+            return S;
+        }
